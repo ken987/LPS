@@ -109,6 +109,86 @@ const ExpenseEditForm = ({
 
 // --- Components ---
 
+// --- Grouping Logic Helper ---
+const extractCategory = (name: string): string => {
+    // 1. Try splitting by full-width space
+    let parts = name.split('　');
+    if (parts.length > 1) return parts[0];
+
+    // 2. Try splitting by half-width space
+    parts = name.split(' ');
+    if (parts.length > 1) return parts[0];
+
+    // 3. Fallback: Return name as is (Single word category)
+    return name;
+};
+
+// --- Group Component ---
+const GroupedExpenseCard = ({
+    category,
+    items,
+    totalAmount,
+    onEdit,
+    onDelete
+}: {
+    category: string,
+    items: any[],
+    totalAmount: number,
+    onEdit: (item: any) => void,
+    onDelete: (id: string) => void
+}) => {
+    const [isExpanded, setIsExpanded] = useState(false);
+
+    return (
+        <div className="bg-white border rounded shadow-sm overflow-hidden">
+            {/* Group Header */}
+            <div
+                className="bg-slate-50 px-3 py-2 flex justify-between items-center cursor-pointer hover:bg-slate-100 transition-colors"
+                onClick={() => setIsExpanded(!isExpanded)}
+            >
+                <div className="flex items-center gap-2">
+                    <span className={`transform transition-transform duration-200 ${isExpanded ? 'rotate-90' : ''}`}>
+                        ▶
+                    </span>
+                    <span className="font-bold text-slate-700">{category}</span>
+                    <span className="text-xs text-slate-500 bg-white px-2 py-0.5 rounded border border-slate-200">
+                        {items.length}件
+                    </span>
+                </div>
+                <div className="font-bold text-slate-700">
+                    ¥{totalAmount.toLocaleString()}
+                </div>
+            </div>
+
+            {/* Group Items (Collapsible) */}
+            {isExpanded && (
+                <div className="border-t divide-y">
+                    {items.map(exp => (
+                        <div key={exp.id} className="p-3 bg-white hover:bg-slate-50 transition-colors group">
+                            <div className="flex justify-between items-start">
+                                <div>
+                                    <div className="text-sm font-medium text-slate-700">{exp.name}</div>
+                                    <div className="text-xs text-slate-500 mt-0.5">
+                                        ¥{exp.amount.toLocaleString()}
+                                    </div>
+                                </div>
+                                <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                                    <Button variant="ghost" size="icon" className="h-7 w-7 text-slate-400 hover:text-blue-600" onClick={(e) => { e.stopPropagation(); onEdit(exp); }}>
+                                        <Pencil className="w-4 h-4" />
+                                    </Button>
+                                    <Button variant="ghost" size="icon" className="h-7 w-7 text-slate-400 hover:text-red-500" onClick={(e) => { e.stopPropagation(); onDelete(exp.id); }}>
+                                        <Trash2 className="w-4 h-4" />
+                                    </Button>
+                                </div>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            )}
+        </div>
+    );
+};
+
 export const Expenses: React.FC = () => {
     // Legacy export just in case
     return <div>use FixedExpenses or IrregularExpenses</div>;
@@ -163,6 +243,29 @@ export const FixedExpenses: React.FC = () => {
         setIsAdding(false);
     };
 
+    // --- Grouping Logic ---
+    const standaloneItems: any[] = [];
+    const groupedItems: { [key: string]: any[] } = {};
+
+    fixedCosts.forEach(item => {
+        // Condition: No Duration
+        if (!item.duration) {
+            const category = extractCategory(item.name);
+            if (!groupedItems[category]) groupedItems[category] = [];
+            groupedItems[category].push(item);
+        } else {
+            standaloneItems.push(item);
+        }
+    });
+
+    // If a group has only 1 item, treat it as standalone (to avoid single-item groups)
+    Object.keys(groupedItems).forEach(key => {
+        if (groupedItems[key].length === 1) {
+            standaloneItems.push(groupedItems[key][0]);
+            delete groupedItems[key];
+        }
+    });
+
     return (
         <div className="space-y-4">
             {/* Base Living Cost (Fixed) */}
@@ -183,40 +286,60 @@ export const FixedExpenses: React.FC = () => {
                 </div>
             </div>
 
+            {/* Editing Form (Overlay) */}
+            {editingId && (
+                <div className="bg-white border rounded p-3 shadow-sm mb-4">
+                    <ExpenseEditForm
+                        editValues={editValues}
+                        setEditValues={setEditValues}
+                        saveEdit={saveEdit}
+                        cancelEdit={() => setEditingId(null)}
+                        isIrregular={false}
+                    />
+                </div>
+            )}
+
             <div className="space-y-3">
-                {fixedCosts.map(exp => (
+                {/* 1. Render Groups */}
+                {!editingId && Object.keys(groupedItems).sort().map(category => {
+                    const items = groupedItems[category];
+                    const total = items.reduce((sum, i) => sum + i.amount, 0);
+                    return (
+                        <GroupedExpenseCard
+                            key={category}
+                            category={category}
+                            items={items}
+                            totalAmount={total}
+                            onEdit={startEdit}
+                            onDelete={(id) => store.removeRecurringExpense(id)}
+                        />
+                    );
+                })}
+
+                {/* 2. Render Standalone Items */}
+                {!editingId && standaloneItems.map(exp => (
                     <div key={exp.id} className="bg-white border rounded p-3 shadow-sm relative group">
-                        {editingId === exp.id ? (
-                            <ExpenseEditForm
-                                editValues={editValues}
-                                setEditValues={setEditValues}
-                                saveEdit={saveEdit}
-                                cancelEdit={() => setEditingId(null)}
-                                isIrregular={false}
-                            />
-                        ) : (
-                            <div className="flex justify-between items-start">
-                                <div>
-                                    <div className="text-base font-medium text-slate-700">{exp.name}</div>
-                                    <div className="flex items-center gap-2 mt-1">
-                                        <span className="text-sm font-bold text-slate-600">¥{exp.amount.toLocaleString()}</span>
-                                        {exp.duration && (
-                                            <span className="text-xs bg-slate-100 px-2 py-0.5 rounded text-slate-500">
-                                                {exp.duration.startAge}-{exp.duration.endAge}歳
-                                            </span>
-                                        )}
-                                    </div>
-                                </div>
-                                <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                                    <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-blue-600" onClick={() => startEdit(exp)}>
-                                        <Pencil className="w-5 h-5" />
-                                    </Button>
-                                    <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-red-500" onClick={() => store.removeRecurringExpense(exp.id)}>
-                                        <Trash2 className="w-5 h-5" />
-                                    </Button>
+                        <div className="flex justify-between items-start">
+                            <div>
+                                <div className="text-base font-medium text-slate-700">{exp.name}</div>
+                                <div className="flex items-center gap-2 mt-1">
+                                    <span className="text-sm font-bold text-slate-600">¥{exp.amount.toLocaleString()}</span>
+                                    {exp.duration && (
+                                        <span className="text-xs bg-slate-100 px-2 py-0.5 rounded text-slate-500">
+                                            {exp.duration.startAge}-{exp.duration.endAge}歳
+                                        </span>
+                                    )}
                                 </div>
                             </div>
-                        )}
+                            <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                                <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-blue-600" onClick={() => startEdit(exp)}>
+                                    <Pencil className="w-5 h-5" />
+                                </Button>
+                                <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-red-500" onClick={() => store.removeRecurringExpense(exp.id)}>
+                                    <Trash2 className="w-5 h-5" />
+                                </Button>
+                            </div>
+                        </div>
                     </div>
                 ))}
             </div>
@@ -314,46 +437,92 @@ export const IrregularExpenses: React.FC = () => {
         setIsAdding(false);
     };
 
+    // --- Grouping Logic ---
+    const standaloneItems: any[] = [];
+    const groupedItems: { [key: string]: any[] } = {};
+
+    irregularExpenses.forEach(item => {
+        // Condition: No Duration AND (No Interval OR Interval <= 1)
+        const hasDuration = !!item.duration;
+        const hasInterval = !!item.interval && item.interval > 1;
+
+        if (!hasDuration && !hasInterval) {
+            const category = extractCategory(item.name);
+            if (!groupedItems[category]) groupedItems[category] = [];
+            groupedItems[category].push(item);
+        } else {
+            standaloneItems.push(item);
+        }
+    });
+
+    // If a group has only 1 item, treat it as standalone
+    Object.keys(groupedItems).forEach(key => {
+        if (groupedItems[key].length === 1) {
+            standaloneItems.push(groupedItems[key][0]);
+            delete groupedItems[key];
+        }
+    });
+
     return (
         <div className="space-y-3">
-            {irregularExpenses.map(exp => (
+            {/* Editing Form (Overlay) */}
+            {editingId && (
+                <div className="bg-white border rounded p-3 shadow-sm mb-4">
+                    <ExpenseEditForm
+                        editValues={editValues}
+                        setEditValues={setEditValues}
+                        saveEdit={saveEdit}
+                        cancelEdit={() => setEditingId(null)}
+                        isIrregular={true}
+                    />
+                </div>
+            )}
+
+            {/* 1. Render Groups */}
+            {!editingId && Object.keys(groupedItems).sort().map(category => {
+                const items = groupedItems[category];
+                const total = items.reduce((sum, i) => sum + i.amount, 0);
+                return (
+                    <GroupedExpenseCard
+                        key={category}
+                        category={category}
+                        items={items}
+                        totalAmount={total}
+                        onEdit={startEdit}
+                        onDelete={(id) => store.removeRecurringExpense(id)}
+                    />
+                );
+            })}
+
+            {/* 2. Render Standalone Items */}
+            {!editingId && standaloneItems.map(exp => (
                 <div key={exp.id} className="bg-white border rounded p-3 shadow-sm relative group">
-                    {editingId === exp.id ? (
-                        <ExpenseEditForm
-                            editValues={editValues}
-                            setEditValues={setEditValues}
-                            saveEdit={saveEdit}
-                            cancelEdit={() => setEditingId(null)}
-                            isIrregular={true}
-                        />
-                    ) : (
-                        <div className="flex justify-between items-start">
-                            <div>
-                                <div className="text-base font-medium text-slate-700">{exp.name}</div>
-                                <div className="flex flex-wrap items-center gap-2 mt-1">
-                                    <span className="text-sm font-bold text-slate-600">¥{exp.amount.toLocaleString()}</span>
-                                    {exp.duration && (
-                                        <span className="text-xs bg-slate-100 px-2 py-0.5 rounded text-slate-500">
-                                            {exp.duration.startAge}-{exp.duration.endAge}歳
-                                        </span>
-                                    )}
-                                    {exp.interval && exp.interval > 1 && (
-                                        <span className="text-xs bg-amber-50 text-amber-600 px-2 py-0.5 rounded border border-amber-100">
-                                            {exp.interval}年毎
-                                        </span>
-                                    )}
-                                </div>
-                            </div>
-                            <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                                <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-blue-600" onClick={() => startEdit(exp)}>
-                                    <Pencil className="w-5 h-5" />
-                                </Button>
-                                <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-red-500" onClick={() => store.removeRecurringExpense(exp.id)}>
-                                    <Trash2 className="w-5 h-5" />
-                                </Button>
+                    <div className="flex justify-between items-start">
+                        <div>
+                            <div className="text-base font-medium text-slate-700">{exp.name}</div>
+                            <div className="flex flex-wrap items-center gap-2 mt-1">
+                                <span className="text-sm font-bold text-slate-600">¥{exp.amount.toLocaleString()}</span>
+                                {exp.duration && (
+                                    <span className="text-xs bg-slate-100 px-2 py-0.5 rounded text-slate-500">
+                                        {exp.duration.startAge}-{exp.duration.endAge}歳
+                                    </span>
+                                )}
+                                {exp.interval && exp.interval > 1 && (
+                                    <span className="text-xs bg-amber-50 text-amber-600 px-2 py-0.5 rounded border border-amber-100">
+                                        {exp.interval}年毎
+                                    </span>
+                                )}
                             </div>
                         </div>
-                    )}
+                        <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                            <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-blue-600" onClick={() => startEdit(exp)}>
+                                <Pencil className="w-5 h-5" />
+                            </Button>
+                            <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-red-500" onClick={() => store.removeRecurringExpense(exp.id)}>
+                                <Trash2 className="w-5 h-5" />
+                            </Button>
+                        </div>
+                    </div>
                 </div>
             ))}
 

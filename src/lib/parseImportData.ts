@@ -48,6 +48,14 @@ export const parseImportData = (text: string): ParsedResult => {
     let categoryPool: { [key: string]: number } = {};
     let parsedCount = 0;
 
+    // --- Column Mapping State ---
+    let colMap = {
+        amount: -1,
+        period: -1,
+        start: -1,
+        end: -1
+    };
+
     const newIncomes: any[] = [];
     const newExpenses: any[] = [];
     const newEvents: any[] = [];
@@ -61,7 +69,24 @@ export const parseImportData = (text: string): ParsedResult => {
         const cols = line.split('\t').map(c => c.trim());
         const joined = cols.join(' ');
 
-        // --- Header / Mode Detection ---
+        // --- Header / Mode Detection & Column Mapping ---
+        let isHeader = false;
+
+        // check for keywords to build column map
+        // Priority: Explicit detect headers row
+        if (joined.includes('金額') || joined.includes('費目') || joined.includes('いつから') || joined.includes('いつまで') || joined.includes('周期')) {
+            isHeader = true;
+            // Reset map if header found (assuming new block or first block)
+            colMap = { amount: -1, period: -1, start: -1, end: -1 };
+
+            cols.forEach((c, i) => {
+                if (c.includes('金額')) colMap.amount = i;
+                else if (c.includes('周期')) colMap.period = i;
+                else if (c.includes('いつから')) colMap.start = i;
+                else if (c.includes('いつまで')) colMap.end = i;
+            });
+        }
+
         if (joined.includes('金額(年間)')) {
             mode = 'INCOME';
             return;
@@ -79,6 +104,8 @@ export const parseImportData = (text: string): ParsedResult => {
             return;
         }
 
+        if (isHeader) return; // Skip header row processing
+
         // Row-based Mode Override
         let rowMode = mode;
         if (joined.includes('💰') || joined.includes('収入') || joined.includes('給与')) rowMode = 'INCOME';
@@ -91,18 +118,30 @@ export const parseImportData = (text: string): ParsedResult => {
         let amountIndex = -1;
         let amountVal = 0;
 
-        for (let i = 0; i < cols.length; i++) {
-            const raw = cols[i];
-            const val = CLEAN_NUMBER(raw);
+        // Use scanned map if available, otherwise heuristic
+        if (colMap.amount !== -1 && cols[colMap.amount]) {
+            const val = CLEAN_NUMBER(cols[colMap.amount]);
+            if (val > 0) {
+                amountIndex = colMap.amount;
+                amountVal = val;
+            }
+        }
 
-            // Skip keywords that might parse as numbers
-            if (raw.includes('年') || raw.includes('月') || raw.includes('回')) continue;
-            if (val <= 0) continue;
+        // Fallback Heuristic if map failed or not set
+        if (amountIndex === -1) {
+            for (let i = 0; i < cols.length; i++) {
+                const raw = cols[i];
+                const val = CLEAN_NUMBER(raw);
 
-            // Heuristic: valid amount matches
-            amountIndex = i;
-            amountVal = val;
-            break;
+                // Skip keywords that might parse as numbers
+                if (raw.includes('年') || raw.includes('月') || raw.includes('回') || raw === '') continue;
+                if (val <= 0) continue;
+
+                // Heuristic: valid amount matches
+                amountIndex = i;
+                amountVal = val;
+                break;
+            }
         }
 
         if (amountIndex === -1) return;
@@ -121,65 +160,68 @@ export const parseImportData = (text: string): ParsedResult => {
             name = name.substring(0, 15) + '...';
         }
 
-        // Period Algorithm & Start/End Age (Positional Strategy)
+        // Period & Date Parsing
         let period = '';
-        const periodKeywords = ['毎月', '1回', '一回', '年', '固定', '変動', 'だけ', '不定'];
-
-        // Find Period Column Index
-        let periodIndex = -1;
-        // Prioritize: 1. Immediately right of Amount (Common)
-        if (cols[amountIndex + 1] && periodKeywords.some(k => cols[amountIndex + 1].includes(k))) {
-            period = cols[amountIndex + 1];
-            periodIndex = amountIndex + 1;
-        } else {
-            // 2. Scan other columns (excluding amount)
-            for (let i = 0; i < cols.length; i++) {
-                if (i === amountIndex) continue;
-                if (periodKeywords.some(k => cols[i].includes(k))) {
-                    period = cols[i];
-                    // Also update period if found here (might differ from initial guess?)
-                    // Initial guess was scanning but didn't store index.
-                    periodIndex = i;
-                    break;
-                }
-            }
-        }
-
         let startAge: number | undefined;
         let endAge: number | undefined;
 
-        if (periodIndex !== -1) {
-            // Positional Logic: [Period] [Start] [End]
-            // Allow empty cells to mean undefined (default start/end)
-
-            // Start Age (Period + 1)
-            if (cols.length > periodIndex + 1) {
-                const val = DETECT_AGE(cols[periodIndex + 1], currentAge, currentYear);
-                // If val is valid number, use it. If undefined/empty, startAge remains undefined.
-                if (val !== undefined) startAge = val;
+        // Strategy A: Use Header Map
+        if (colMap.period !== -1 || colMap.start !== -1 || colMap.end !== -1) {
+            if (colMap.period !== -1 && cols[colMap.period]) period = cols[colMap.period];
+            if (colMap.start !== -1 && cols[colMap.start]) startAge = DETECT_AGE(cols[colMap.start], currentAge, currentYear);
+            if (colMap.end !== -1 && cols[colMap.end]) endAge = DETECT_AGE(cols[colMap.end], currentAge, currentYear);
+        }
+        // Strategy B: Fallback Heuristic (Legacy)
+        else {
+            const periodKeywords = ['毎月', '1回', '一回', '年', '固定', '変動', 'だけ', '不定'];
+            let periodIndex = -1;
+            // Prioritize: 1. Immediately right of Amount (Common)
+            if (cols[amountIndex + 1] && periodKeywords.some(k => cols[amountIndex + 1].includes(k))) {
+                period = cols[amountIndex + 1];
+                periodIndex = amountIndex + 1;
+            } else {
+                // 2. Scan other columns (excluding amount)
+                for (let i = 0; i < cols.length; i++) {
+                    if (i === amountIndex) continue;
+                    if (periodKeywords.some(k => cols[i].includes(k))) {
+                        period = cols[i];
+                        periodIndex = i;
+                        break;
+                    }
+                }
             }
 
-            // End Age (Period + 2)
-            if (cols.length > periodIndex + 2) {
-                const val = DETECT_AGE(cols[periodIndex + 2], currentAge, currentYear);
-                // If val is valid number, use it. If undefined/empty, endAge remains undefined.
-                if (val !== undefined) endAge = val;
-            }
-        } else {
-            // Fallback if no period found: scan sequentially after amount (ignoring empty non-numeric strings)
-            for (let i = amountIndex + 1; i < cols.length; i++) {
-                const age = DETECT_AGE(cols[i], currentAge, currentYear);
-                if (age !== undefined) {
-                    if (startAge === undefined) startAge = age;
-                    else if (endAge === undefined) endAge = age;
+            if (periodIndex !== -1) {
+                // Positional Logic: [Period] [Start] [End]
+                // Start Age (Period + 1)
+                if (cols.length > periodIndex + 1) {
+                    const val = DETECT_AGE(cols[periodIndex + 1], currentAge, currentYear);
+                    if (val !== undefined) startAge = val;
+                }
+                // End Age (Period + 2)
+                if (cols.length > periodIndex + 2) {
+                    const val = DETECT_AGE(cols[periodIndex + 2], currentAge, currentYear);
+                    if (val !== undefined) endAge = val;
+                }
+            } else {
+                // Fallback if no period found: scan sequentially
+                for (let i = amountIndex + 1; i < cols.length; i++) {
+                    const age = DETECT_AGE(cols[i], currentAge, currentYear);
+                    if (age !== undefined) {
+                        if (startAge === undefined) startAge = age;
+                        else if (endAge === undefined) endAge = age;
+                    }
                 }
             }
         }
 
+        // Critical Fix: If Start is missing but End is present, imply Start = Current Age
+        // preventing "2027" from being read as Start Age 32 with End Age 100
+        if (startAge === undefined && endAge !== undefined) {
+            startAge = currentAge;
+        }
+
         // Duration Object Logic
-        // If start/end missing, return undefined (Forever).
-        // If start present but end missing -> treat end as 100? Or just undefined means "From start to Forever".
-        // Types: duration?: { startAge: number, endAge: number }
         const duration = (startAge !== undefined || endAge !== undefined)
             ? { startAge: startAge ?? currentAge, endAge: endAge ?? 100 }
             : undefined;
@@ -206,17 +248,12 @@ export const parseImportData = (text: string): ParsedResult => {
                     endAge: endAge ?? 100, // Default to 100 (Forever)
                     applyGrowth: true,
                 });
+
             } else {
                 // EXPENSE
-                const basicLivingKeywords = ['食費', '日用品', '光熱費', '通信費', '水道', '電気', 'ガス'];
-                if (basicLivingKeywords.some(k => name.includes(k))) {
-                    let annual = amountVal;
-                    if (period === '' || period.includes('毎月') || period.includes('月')) {
-                        annual = amountVal * 12;
-                    }
-                    categoryPool['basic_living'] = (categoryPool['basic_living'] || 0) + annual;
-                    return;
-                }
+                // Removed aggregation logic per user request. Basic living items (Food, Utilities etc) are now treated as individual items.
+                // const basicLivingKeywords = ['食費', '日用品', '光熱費', '通信費', '水道', '電気', 'ガス'];
+                // ... (logic removed)
 
                 if (period.includes('毎月') || period === '') {
                     newExpenses.push({
@@ -338,7 +375,8 @@ export const parseImportData = (text: string): ParsedResult => {
         parsedCount++;
     });
 
-    // Add aggregate
+    // Add aggregate - REMOVED per user request
+    /*
     if (categoryPool['basic_living'] > 0) {
         newExpenses.push({
             id: crypto.randomUUID(),
@@ -348,6 +386,7 @@ export const parseImportData = (text: string): ParsedResult => {
             isMonthly: true,
         });
     }
+    */
 
     newIncomes.forEach(i => store.addIncome(i));
     newInvestments.forEach(i => store.addInvestmentFlow(i));

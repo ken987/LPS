@@ -13,8 +13,14 @@ interface Props {
 
 const formatYAxis = (value: number) => {
     const abs = Math.abs(value);
-    if (abs >= 100000000) return `${Math.round(value / 100000000).toLocaleString()}億`;
-    if (abs >= 10000) return `${Math.round(value / 10000).toLocaleString()}万`;
+    if (abs >= 100000000) {
+        // use 1 decimal place if needed (e.g. 1.5億), remove trailing zeros
+        return `${(value / 100000000).toLocaleString(undefined, { maximumFractionDigits: 1 })}億`;
+    }
+    if (abs >= 10000) {
+        // use 1 decimal place if needed (e.g. 1.5万), though usually not needed for larger numbers
+        return `${(value / 10000).toLocaleString(undefined, { maximumFractionDigits: 1 })}万`;
+    }
     return value.toLocaleString();
 };
 
@@ -309,7 +315,7 @@ export const FinancialCharts: React.FC<Props> = ({ data }) => {
                                     <Legend wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }} />
 
                                     <Bar yAxisId="left" dataKey="annualInvestments" stackId="a" fill="#d97706" name="投資積立額" barSize={20} />
-                                    <Bar yAxisId="left" dataKey="annualSavings" stackId="a" fill="#fbbf24" name="現金貯蓄 (余剰金)" barSize={20} radius={[4, 4, 0, 0]} />
+                                    <Bar yAxisId="left" dataKey="annualSavings" stackId="a" fill="#fbbf24" name="現金貯蓄" barSize={20} radius={[4, 4, 0, 0]} />
 
                                     <Line
                                         yAxisId="right"
@@ -341,9 +347,13 @@ export const FinancialCharts: React.FC<Props> = ({ data }) => {
                     <ResponsiveContainer width="100%" height="100%">
                         <AreaChart data={data} margin={{ top: 10, right: 30, left: 10, bottom: 0 }}>
                             <defs>
-                                <linearGradient id="colorNetWorth" x1="0" y1="0" x2="0" y2="1">
-                                    <stop offset="5%" stopColor="#6366f1" stopOpacity={0.8} />
-                                    <stop offset="95%" stopColor="#6366f1" stopOpacity={0.1} />
+                                <linearGradient id="colorCash" x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="5%" stopColor="#0ea5e9" stopOpacity={0.8} />
+                                    <stop offset="95%" stopColor="#0ea5e9" stopOpacity={0.1} />
+                                </linearGradient>
+                                <linearGradient id="colorInvestments" x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="5%" stopColor="#f59e0b" stopOpacity={0.8} />
+                                    <stop offset="95%" stopColor="#f59e0b" stopOpacity={0.1} />
                                 </linearGradient>
                             </defs>
                             <XAxis dataKey="age" tick={{ fontSize: 12, fill: '#334155' }} />
@@ -363,13 +373,34 @@ export const FinancialCharts: React.FC<Props> = ({ data }) => {
                                     boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'
                                 }}
                             />
+                            <Legend wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }} />
+
                             <Area
+                                type="monotone"
+                                dataKey="assetBreakdown.investments"
+                                stackId="1"
+                                stroke="#d97706"
+                                strokeWidth={2}
+                                fill="url(#colorInvestments)"
+                                name="投資資産"
+                            />
+                            <Area
+                                type="monotone"
+                                dataKey="assetBreakdown.cash"
+                                stackId="1"
+                                stroke="#0284c7"
+                                strokeWidth={2}
+                                fill="url(#colorCash)"
+                                name="現金資産"
+                            />
+
+                            <Line
                                 type="monotone"
                                 dataKey="netWorth"
                                 stroke="#4f46e5"
                                 strokeWidth={3}
-                                fill="url(#colorNetWorth)"
-                                name="純資産"
+                                dot={false}
+                                name="純資産 (負債控除後)"
                             />
 
                         </AreaChart>

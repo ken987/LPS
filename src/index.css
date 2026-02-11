@@ -76,7 +76,7 @@
     /* Restore Premium Background */
     background-image:
       linear-gradient(rgba(255, 255, 255, 0.65), rgba(255, 255, 255, 0.65)),
-      url('/illustration/background illustration.jpg');
+      url('/illustration/background illustration.png');
     background-size: cover;
     background-position: center;
     background-attachment: fixed;

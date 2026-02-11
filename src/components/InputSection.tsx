@@ -146,7 +146,7 @@ export const InputSection: React.FC = () => {
 
                 {/* RIGHT COLUMN: E - H */}
                 <div className="w-full flex flex-col">
-                    <Accordion type="multiple" defaultValue={['events', 'investments', 'stock']} className="w-full border-none">
+                    <Accordion type="multiple" defaultValue={[]} className="w-full border-none">
                         {/* SECTION E: Life Events */}
                         <AccordionItem value="events" className={itemClass}>
                             <AccordionTrigger className={triggerClass}>

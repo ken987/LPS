@@ -6,25 +6,11 @@ import { Home, Car, HeartPulse } from 'lucide-react';
 
 export const Lifestyle: React.FC = () => {
     const store = useStore();
-    const { settings, recurringExpenses } = store;
+    const { settings } = store;
 
     const updateLifestyle = (key: keyof typeof settings.lifestyle, value: any) => {
         const newLifestyle = { ...settings.lifestyle, [key]: value };
         store.setSettings({ lifestyle: newLifestyle });
-
-        // Logic: Add default expenses if they don't exist
-        if (key === 'carCount' && value > 0) {
-            const hasVehicleExp = recurringExpenses.some(e => e.type === 'Vehicle');
-            if (!hasVehicleExp) {
-                store.addRecurringExpense({ id: crypto.randomUUID(), name: '車両維持費(税・車検等)', amount: 50000 * value, type: 'Vehicle', isMonthly: true });
-            }
-        }
-        if (key === 'hasInsurance' && value === true) {
-            const hasInsExp = recurringExpenses.some(e => e.type === 'Insurance');
-            if (!hasInsExp) {
-                store.addRecurringExpense({ id: crypto.randomUUID(), name: '生命・医療保険料', amount: 30000, type: 'Insurance', isMonthly: true });
-            }
-        }
     };
 
     return (

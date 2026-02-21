@@ -226,13 +226,14 @@ export const useSimulation = () => {
 
             // 8. Net Cash Flow
             // Revenue = Income
-            // Expenses = Living + Other + Loan Interest + Event
-            // Cash Out = Loan Principal + Investment Flow
+            // Expenses = Living + Other + Event (Loan Interest EXCLUDED as it's in Expenditure Plan)
+            // Cash Out = Investment Flow (Loan Principal EXCLUDED as it's in Expenditure Plan)
 
-            const totalExpenses = yearLivingCost + otherRecurringCost + totalLoanInterest + eventCost;
+            const totalExpenses = yearLivingCost + otherRecurringCost + eventCost; // Removed totalLoanInterest
 
             // Note: Investment Flow is NOT an expense, it's a transfer. But it reduces currentCash.
-            const netCashFlow = totalIncome - totalExpenses - totalLoanPrincipalPayment - yearInvestmentFlow;
+            // Loan Principal is now EXCLUDED from Cash Flow logic.
+            const netCashFlow = totalIncome - totalExpenses - yearInvestmentFlow; // Removed totalLoanPrincipalPayment
 
             // Current state before applying netCashFlow (but after removing investment flow)
             // Wait, netCashFlow already subtracts investment flow.
@@ -262,13 +263,37 @@ export const useSimulation = () => {
 
                 // 2. If Cash goes negative, take from Investments
                 if (currentCash < 0) {
-                    const deficit = -currentCash; // Positive amount needed
+                    let deficit = -currentCash; // Positive amount needed
+                    let totalLiquidated = 0;
+
+                    // 1. Liquidate Accumulated Investments (New Investments)
                     if (accumulatedInvestments > 0) {
                         const coverage = Math.min(accumulatedInvestments, deficit);
                         accumulatedInvestments -= coverage;
-                        currentCash += coverage; // Bring cash back up (towards 0)
+                        deficit -= coverage;
+                        currentCash += coverage;
+                        totalLiquidated += coverage;
                     }
-                    // If still negative, it remains as debt in currentCash
+
+                    // 2. Liquidate Active Assets (Initial Investments)
+                    if (deficit > 0) {
+                        for (const asset of activeAssets) {
+                            if (asset.type === 'Investment' && asset.amount > 0) {
+                                const coverage = Math.min(asset.amount, deficit);
+                                asset.amount -= coverage;
+                                deficit -= coverage;
+                                currentCash += coverage;
+                                totalLiquidated += coverage;
+
+                                if (deficit <= 0) break;
+                            }
+                        }
+                    }
+
+                    // Update Total Investments to reflect liquidation in this year's result
+                    totalInvestments -= totalLiquidated;
+
+                    // Note: If deficit > 0 still, it remains as debt in currentCash (unavoidable)
                 }
             }
 
@@ -299,7 +324,7 @@ export const useSimulation = () => {
 
             data.push({
                 age,
-                revenue: totalIncome + investmentReturns,
+                revenue: totalIncome, // was totalIncome + investmentReturns
                 expense: totalExpenses,
                 netCashFlow: netCashFlow,
 
@@ -311,7 +336,7 @@ export const useSimulation = () => {
                 totalLiabilities: totalLiabilitiesBalance,
                 netWorth: (currentCash + totalInvestments + totalOther + accumulatedCashSavings) - totalLiabilitiesBalance,
 
-                incomeBreakdown: { ...incomeBreakdown, "Investment Growth": investmentReturns },
+                incomeBreakdown: { ...incomeBreakdown }, // Removed "Investment Growth"
                 assetBreakdown: {
                     cash: currentCash + accumulatedCashSavings,
                     investments: totalInvestments,

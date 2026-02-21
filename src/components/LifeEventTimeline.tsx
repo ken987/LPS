@@ -54,11 +54,11 @@ export const LifeEventTimeline: React.FC = () => {
                     <div className="space-y-4 pt-2">
 
                         {/* 1. Events Row */}
-                        <div className="flex items-center h-16">
-                            <div className="w-[80px] flex-shrink-0 text-right pr-2 text-sm font-bold text-slate-700">
+                        <div className="flex items-start h-24">
+                            <div className="w-[80px] flex-shrink-0 text-right pr-2 pt-2 text-sm font-bold text-slate-700">
                                 イベント
                             </div>
-                            <div className="flex-1 flex border-t border-b border-slate-200 bg-slate-50/50 relative pr-[30px]">
+                            <div className="flex-1 flex relative pr-[30px]">
                                 {years.map((year) => {
                                     // 1. Manual Events
                                     const manualEvents = events.filter(e => e.age === year);
@@ -71,19 +71,19 @@ export const LifeEventTimeline: React.FC = () => {
                                     });
 
                                     return (
-                                        <div key={year} className="flex-1 relative border-l border-slate-200/50 flex justify-center items-center group">
-                                            <div className="flex flex-wrap justify-center items-center content-center gap-1 absolute w-[200%] z-10 pointer-events-none">
+                                        <div key={year} className="flex-1 relative flex flex-col items-center pt-2">
+                                            <div className="flex flex-col items-center gap-1 z-10 w-full">
                                                 {/* Manual Events */}
                                                 {manualEvents.map((ev) => (
                                                     <div
                                                         key={ev.id}
-                                                        className="pointer-events-auto cursor-help hover:z-50 hover:scale-125 transition-transform duration-200"
+                                                        className="cursor-help hover:scale-150 transition-transform duration-200 relative z-20"
                                                         title={`${ev.name}: ${Math.round(ev.amount / 10000).toLocaleString()}万`}
                                                     >
                                                         <img
                                                             src={getEventIconPath(ev.name)}
                                                             alt={ev.name}
-                                                            className={`w-8 h-8 object-contain flex-shrink-0 drop-shadow-sm ${getEventColorClass(ev.name)}`}
+                                                            className={`w-6 h-6 min-w-6 min-h-6 max-w-none object-contain drop-shadow-sm ${getEventColorClass(ev.name)}`}
                                                         />
                                                     </div>
                                                 ))}
@@ -92,13 +92,13 @@ export const LifeEventTimeline: React.FC = () => {
                                                 {payoffs.map((l, idx) => (
                                                     <div
                                                         key={`payoff-${idx}`}
-                                                        className="pointer-events-auto cursor-help hover:z-50 hover:scale-125 transition-transform duration-200"
+                                                        className="cursor-help hover:scale-150 transition-transform duration-200 relative z-20"
                                                         title={`完済: ${l.name}`}
                                                     >
                                                         <img
                                                             src={getEventIconPath('完済')}
                                                             alt="完済"
-                                                            className={`w-8 h-8 object-contain flex-shrink-0 drop-shadow-sm ${getEventColorClass('完済')}`}
+                                                            className={`w-6 h-6 min-w-6 min-h-6 max-w-none object-contain drop-shadow-sm ${getEventColorClass('完済')}`}
                                                         />
                                                     </div>
                                                 ))}

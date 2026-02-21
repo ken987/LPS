@@ -308,6 +308,14 @@ export const CurrentStock: React.FC = () => {
             {/* 4. Liabilities */}
             <div>
                 <Label className="text-sm font-bold mb-2 block text-red-700 bg-red-50 p-1 w-fit px-2 rounded">負債・ローン残高</Label>
+
+                {(isAddingLiability || editLiability) && (
+                    <div className="mb-3 p-3 bg-blue-50 border border-blue-200 rounded-md text-xs text-blue-800 space-y-1">
+                        <p className="font-bold">※毎月のローン返済額は『D. 支出計画』に入力してください。</p>
+                        <p>※ここで入力したローン残高は『資産と負債の推移グラフ』にのみ反映され、毎年の収支（キャッシュフロー）からは二重で引き落とされません。</p>
+                    </div>
+                )}
+
                 <div className="space-y-2">
                     {liabilities.map(l => (
                         <div key={l.id} className="bg-white border rounded p-2 shadow-sm relative group">

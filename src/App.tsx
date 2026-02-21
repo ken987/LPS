@@ -11,7 +11,7 @@ function App() {
 
   return (
     <div className="min-h-screen bg-transparent">
-      <header className="bg-primary text-primary-foreground p-4 shadow-md">
+      <header className="bg-primary text-primary-foreground p-4 shadow-md sticky top-0 z-50">
         <div className="w-full px-6 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <h1 className="text-2xl font-bold tracking-tight">ライフプランシミュレーション</h1>
@@ -23,6 +23,7 @@ function App() {
               size="sm"
               onClick={() => setIsImportModalOpen(true)}
               className="flex items-center gap-2 text-primary bg-white hover:bg-white/90"
+              title="支出管理表のデータをインポートします"
             >
               <Upload className="h-4 w-4" />
               インポート

@@ -105,7 +105,7 @@ export const FinancialCharts: React.FC<Props> = ({ data }) => {
                                         stroke="#dc2626"
                                         strokeWidth={3}
                                         dot={{ r: 4, strokeWidth: 2 }}
-                                        name="総支出 (利息込)"
+                                        name="総支出"
                                     />
                                 </ComposedChart>
                             </ResponsiveContainer>

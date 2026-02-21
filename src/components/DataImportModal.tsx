@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { ImportGuide } from './ImportGuide';
 import { Button } from './ui/button';
 import { X, Upload, CheckCircle, AlertTriangle } from 'lucide-react';
 import { parseImportData } from '../lib/parseImportData';
@@ -43,19 +44,19 @@ export const DataImportModal: React.FC<DataImportModalProps> = ({ isOpen, onClos
                     <div className="p-2 bg-blue-100 text-blue-600 rounded-full">
                         <Upload className="h-5 w-5" />
                     </div>
-                    <h2 className="text-xl font-bold text-gray-800">スプレッドシートから一括読み込み</h2>
+                    <h2 className="text-xl font-bold text-gray-800">支出管理表のデータインポート</h2>
                 </div>
 
                 {!result ? (
                     <>
+                        <ImportGuide />
                         <p className="text-sm text-gray-600 mb-4">
-                            スプレッドシートの範囲を選択してコピー(Ctrl+C)し、下のボックスに貼り付け(Ctrl+V)てください。<br />
-                            <span className="text-xs text-gray-400">※ B列〜H列（名前, 周期, 金額...）を含む形式に対応</span>
+                            ※ 支出管理表のB列〜G列を貼り付け
                         </p>
 
                         <textarea
-                            className="w-full h-64 p-3 border rounded-md font-mono text-sm resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-slate-50"
-                            placeholder="ここに貼り付け... (例: 給与 毎月 300000 ...)"
+                            className="w-full h-32 p-3 border rounded-md font-mono text-sm resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-slate-50"
+                            placeholder="データ貼り付け"
                             value={text}
                             onChange={(e) => setText(e.target.value)}
                         />

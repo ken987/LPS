@@ -103,7 +103,7 @@ export interface SimulationSettings {
 
 export interface YearlyResult {
     age: number;
-    revenue: number; // Total Income + Investment Returns
+    revenue: number; // Total Income (excluding Investment Returns)
     expense: number; // Living Cost + Loan Interest + Life Events
     netCashFlow: number; // Revenue - Expense
 

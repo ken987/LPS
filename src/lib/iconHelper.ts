@@ -1,23 +1,23 @@
 export const ICON_BASE_PATH = '/icons';
-export const DEFAULT_ICON = 'flag.svg';
+export const DEFAULT_ICON = 'flag.png';
 
 // Prioritized mapping rules
 export const ICON_MAPPING: { keywords: string[]; icon: string }[] = [
-    { keywords: ['保育', '幼稚園'], icon: 'nursery.svg' },
-    { keywords: ['小学', 'ランドセル'], icon: 'elementary.svg' },
-    { keywords: ['中学'], icon: 'middle-school.svg' },
-    { keywords: ['高校'], icon: 'high-school.svg' },
-    { keywords: ['大学', '専門'], icon: 'university.svg' },
-    { keywords: ['起業', '独立'], icon: 'startup.svg' },
-    { keywords: ['定年', '退職', '還暦', '祝い'], icon: 'retirement.svg' },
-    { keywords: ['介護', 'ケア'], icon: 'nursing.svg' },
-    { keywords: ['結婚', '婚約', 'wedding'], icon: 'marriage.svg' },
-    { keywords: ['出産', '誕生', 'ベビー', 'baby', 'birth'], icon: 'baby.svg' },
-    { keywords: ['住宅', '家', 'マイホーム', 'マンション', 'home', 'house'], icon: 'house.svg' },
-    { keywords: ['リフォーム', '修繕', '外壁'], icon: 'renovation.svg' },
-    { keywords: ['車', '自動車', 'バイク', 'car', 'auto'], icon: 'car.svg' },
-    { keywords: ['旅行', '旅', 'trip', 'travel'], icon: 'trip.svg' },
-    { keywords: ['完済'], icon: 'payoff.svg' },
+    { keywords: ['保育', '幼稚園'], icon: 'nursery_infant.png' },
+    { keywords: ['小学', 'ランドセル'], icon: 'elementary.png' },
+    { keywords: ['中学'], icon: 'middle-school.png' },
+    { keywords: ['高校'], icon: 'high-school.png' },
+    { keywords: ['大学', '専門'], icon: 'university.png' },
+    { keywords: ['起業', '独立'], icon: 'flag.png' },
+    { keywords: ['定年', '退職', '還暦', '祝い'], icon: 'retirement_60th birthday.png' },
+    { keywords: ['介護', 'ケア'], icon: 'nursing.png' },
+    { keywords: ['結婚', '婚約', 'wedding'], icon: 'marriage.png' },
+    { keywords: ['出産', '誕生', 'ベビー', 'baby', 'birth'], icon: 'baby.png' },
+    { keywords: ['住宅', '家', 'マイホーム', 'マンション', 'home', 'house'], icon: 'house.png' },
+    { keywords: ['リフォーム', '修繕', '外壁'], icon: 'renovation.png' },
+    { keywords: ['車', '自動車', 'バイク', 'car', 'auto'], icon: 'car.png' },
+    { keywords: ['旅行', '旅', 'trip', 'travel'], icon: 'trip.png' },
+    { keywords: ['完済'], icon: 'payoff.png' },
 ];
 
 export const getEventIconPath = (name: string): string => {
@@ -97,11 +97,11 @@ export const getEventColorClass = (name: string): string => {
 
 // --- Education Stages Definition ---
 export const EDU_STAGES = [
-    { label: '大学', min: 19, max: 23, color: 'bg-purple-200', text: 'text-purple-600', icon: 'university.svg' },
-    { label: '高校', min: 16, max: 19, color: 'bg-blue-200', text: 'text-blue-600', icon: 'high-school.svg' },
-    { label: '中学', min: 13, max: 16, color: 'bg-green-200', text: 'text-green-600', icon: 'middle-school.svg' },
-    { label: '小学校', min: 6, max: 13, color: 'bg-yellow-200', text: 'text-yellow-600', icon: 'elementary.svg' },
-    { label: '幼児', min: 3, max: 6, color: 'bg-pink-200', text: 'text-pink-600', icon: 'nursery.svg' },
+    { label: '大学', min: 19, max: 23, color: 'bg-purple-200', text: 'text-purple-600', icon: 'university.png' },
+    { label: '高校', min: 16, max: 19, color: 'bg-blue-200', text: 'text-blue-600', icon: 'high-school.png' },
+    { label: '中学', min: 13, max: 16, color: 'bg-green-200', text: 'text-green-600', icon: 'middle-school.png' },
+    { label: '小学校', min: 6, max: 13, color: 'bg-yellow-200', text: 'text-yellow-600', icon: 'elementary.png' },
+    { label: '幼児', min: 3, max: 6, color: 'bg-pink-200', text: 'text-pink-600', icon: 'nursery_infant.png' },
 ];
 
 export const getEducationStage = (age: number) => {

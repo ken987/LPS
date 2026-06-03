@@ -36,6 +36,11 @@ export const InputSection: React.FC = () => {
 
     const totalExpense = totalFixed + totalIrregular;
 
+    // F. Investment Total (Active at Start)
+    const totalInvestment = store.investmentFlows
+        .filter(f => currentAge >= f.startAge && currentAge <= f.endAge)
+        .reduce((sum, f) => sum + f.amount, 0);
+
     // G. Assets & Liabilities Total
     const totalAssets = assets.reduce((sum, a) => sum + a.amount, 0) + settings.cashReserve;
     const totalLiabilities = liabilities.reduce((sum, l) => sum + l.principal, 0);
@@ -56,7 +61,7 @@ export const InputSection: React.FC = () => {
                 <h2 className="text-xl font-bold text-slate-800">試算条件</h2>
             </div>
 
-            <div className="grid grid-cols-1 min-[1600px]:grid-cols-2 gap-6 min-[1600px]:gap-8">
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
 
                 {/* LEFT COLUMN: A - D */}
                 <div className="w-full flex flex-col">
@@ -146,7 +151,7 @@ export const InputSection: React.FC = () => {
 
                 {/* RIGHT COLUMN: E - H */}
                 <div className="w-full flex flex-col">
-                    <Accordion type="multiple" defaultValue={[]} className="w-full border-none">
+                    <Accordion type="multiple" defaultValue={['events', 'investments']} className="w-full border-none">
                         {/* SECTION E: Life Events */}
                         <AccordionItem value="events" className={itemClass}>
                             <AccordionTrigger className={triggerClass}>
@@ -165,6 +170,7 @@ export const InputSection: React.FC = () => {
                                 <div className={headerWrapperClass}>
                                     <span className={headerTextClass}>F. 資産形成(貯金・投資)</span>
                                 </div>
+                                <span className={totalTextClass}>年間積立: ¥{Math.round(totalInvestment / 10000).toLocaleString()}万</span>
                             </AccordionTrigger>
                             <AccordionContent className={contentClass}>
                                 <InvestmentFlowSection />

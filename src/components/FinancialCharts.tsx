@@ -9,7 +9,17 @@ import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 
 interface Props {
     data: YearlyResult[];
+    isPrinting?: boolean;
 }
+
+// 印刷時の固定チャートサイズ（A3横2列レイアウト）
+// A3横 297mm≒788px(72dpi) - 余白(40mm)≒114px - タイトル40px - 行間16px = 約618px / 2行 - CardHeader55px ≈ 254px
+// → 安全値として270pxに設定（96dpiでも1ページ収まる）
+const PRINT_W = 700;
+const PRINT_H = 270;
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const fmtNum = (val: any): number => Math.round(Number(val) || 0);
 
 const formatYAxis = (value: number) => {
     const abs = Math.abs(value);
@@ -24,9 +34,11 @@ const formatYAxis = (value: number) => {
     return value.toLocaleString();
 };
 
-export const FinancialCharts: React.FC<Props> = ({ data }) => {
+export const FinancialCharts: React.FC<Props> = ({ data, isPrinting }) => {
+    const rcW = isPrinting ? PRINT_W : "100%";
+    const rcH = isPrinting ? PRINT_H : "100%";
     return (
-        <div className="space-y-8">
+        <div className="space-y-8 print-charts-grid">
             {/* 2. PL CHART (COMPOSED) */}
             {(() => {
                 // Outlier Clipping Logic for PL Chart
@@ -70,20 +82,20 @@ export const FinancialCharts: React.FC<Props> = ({ data }) => {
                             </CardTitle>
                         </CardHeader>
 
-                        <CardContent className="h-[380px] pt-6">
-                            <ResponsiveContainer width="100%" height="100%">
-                                <ComposedChart data={data} margin={{ top: 10, right: 30, left: 10, bottom: 0 }}>
-                                    <XAxis dataKey="age" tick={{ fontSize: 12, fill: '#334155' }} />
+                        <CardContent className="h-[380px] pt-6 print-chart-content">
+                            <ResponsiveContainer width={rcW} height={rcH}>
+                                <ComposedChart data={data} margin={{ top: 10, right: 50, left: 10, bottom: 5 }}>
+                                    <XAxis dataKey="age" tick={{ fontSize: 11, fill: '#334155' }} interval={4} />
                                     <YAxis
                                         tickFormatter={formatYAxis}
-                                        width={80}
-                                        tick={{ fontSize: 12, fill: '#334155' }}
+                                        width={75}
+                                        tick={{ fontSize: 11, fill: '#334155' }}
                                         domain={[0, plDomainMax]}
                                         allowDataOverflow={true}
                                     />
 
                                     <Tooltip
-                                        formatter={(val: number | undefined) => Math.round(val || 0).toLocaleString()}
+                                        formatter={(val) => fmtNum(val).toLocaleString()}
                                         contentStyle={{
                                             fontSize: '12px',
                                             backgroundColor: 'rgba(255, 255, 255, 0.95)',
@@ -96,15 +108,15 @@ export const FinancialCharts: React.FC<Props> = ({ data }) => {
                                     <CartesianGrid stroke="#e2e8f0" strokeDasharray="3 3" />
 
                                     {/* Revenue as Bars */}
-                                    <Bar dataKey="revenue" barSize={20} fill="#3b82f6" name="総収入" radius={[4, 4, 0, 0]} />
+                                    <Bar dataKey="revenue" barSize={12} fill="#3b82f6" name="総収入" radius={[2, 2, 0, 0]} />
 
                                     {/* Expense as Line */}
                                     <Line
                                         type="monotone"
                                         dataKey="expense"
                                         stroke="#dc2626"
-                                        strokeWidth={3}
-                                        dot={{ r: 4, strokeWidth: 2 }}
+                                        strokeWidth={2}
+                                        dot={{ r: 3, strokeWidth: 2 }}
                                         name="総支出"
                                     />
                                 </ComposedChart>
@@ -123,9 +135,9 @@ export const FinancialCharts: React.FC<Props> = ({ data }) => {
                     </CardTitle>
                 </CardHeader>
 
-                <CardContent className="h-[380px] pt-6">
-                    <ResponsiveContainer width="100%" height="100%">
-                        <AreaChart data={data} margin={{ top: 10, right: 30, left: 10, bottom: 0 }}>
+                <CardContent className="h-[380px] pt-6 print-chart-content">
+                    <ResponsiveContainer width={rcW} height={rcH}>
+                        <AreaChart data={data} margin={{ top: 10, right: 50, left: 10, bottom: 5 }}>
                             <defs>
                                 <linearGradient id="colorAssets" x1="0" y1="0" x2="0" y2="1">
                                     <stop offset="5%" stopColor="#10b981" stopOpacity={0.8} />
@@ -136,16 +148,16 @@ export const FinancialCharts: React.FC<Props> = ({ data }) => {
                                     <stop offset="95%" stopColor="#ef4444" stopOpacity={0.1} />
                                 </linearGradient>
                             </defs>
-                            <XAxis dataKey="age" tick={{ fontSize: 12, fill: '#334155' }} />
+                            <XAxis dataKey="age" tick={{ fontSize: 11, fill: '#334155' }} interval={4} />
                             <YAxis
                                 tickFormatter={formatYAxis}
-                                width={80}
-                                tick={{ fontSize: 12, fill: '#334155' }}
+                                width={75}
+                                tick={{ fontSize: 11, fill: '#334155' }}
                             />
 
                             <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
                             <Tooltip
-                                formatter={(val: number | undefined) => Math.round(val || 0).toLocaleString()}
+                                formatter={(val) => fmtNum(val).toLocaleString()}
                                 contentStyle={{
                                     fontSize: '12px',
                                     backgroundColor: 'rgba(255, 255, 255, 0.95)',
@@ -156,23 +168,20 @@ export const FinancialCharts: React.FC<Props> = ({ data }) => {
 
                             <Legend wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }} />
 
-                            {/* Assets Stack */}
                             <Area
                                 type="monotone"
                                 dataKey="totalAssets"
-                                stackId="1"
                                 stroke="#059669"
-                                strokeWidth={3}
+                                strokeWidth={2.5}
                                 fill="url(#colorAssets)"
                                 name="総資産"
                             />
 
-                            {/* Liabilities */}
                             <Area
                                 type="monotone"
                                 dataKey="totalLiabilities"
                                 stroke="#dc2626"
-                                strokeWidth={3}
+                                strokeWidth={2.5}
                                 fill="url(#colorLiabilities)"
                                 name="負債総額"
                             />
@@ -266,8 +275,8 @@ export const FinancialCharts: React.FC<Props> = ({ data }) => {
                             </CardTitle>
                         </CardHeader>
 
-                        <CardContent className="h-[380px] pt-6">
-                            <ResponsiveContainer width="100%" height="100%">
+                        <CardContent className="h-[380px] pt-6 print-chart-content">
+                            <ResponsiveContainer width={rcW} height={rcH}>
                                 {/* Use raw data, allow overflow via domain */}
                                 <ComposedChart data={data} margin={{ top: 10, right: 30, left: 10, bottom: 0 }}>
                                     <XAxis dataKey="age" tick={{ fontSize: 12, fill: '#334155' }} />
@@ -300,10 +309,10 @@ export const FinancialCharts: React.FC<Props> = ({ data }) => {
                                     <ReferenceLine y={0} yAxisId="left" stroke="#94a3b8" strokeWidth={2} />
 
                                     <Tooltip
-                                        formatter={(val: number | undefined, name: string | undefined) => {
-                                            if (val === undefined) return [''];
-                                            if (name === '貯蓄率') return [`${val.toFixed(1)}%`, name];
-                                            return [Math.round(val).toLocaleString(), name];
+                                        formatter={(val, name) => {
+                                            const n = fmtNum(val);
+                                            if (name === '貯蓄率') return [`${Number(val).toFixed(1)}%`, name as string];
+                                            return [n.toLocaleString(), name as string];
                                         }}
                                         contentStyle={{
                                             fontSize: '12px',
@@ -343,8 +352,8 @@ export const FinancialCharts: React.FC<Props> = ({ data }) => {
                     </CardTitle>
                 </CardHeader>
 
-                <CardContent className="h-[300px] pt-6">
-                    <ResponsiveContainer width="100%" height="100%">
+                <CardContent className="h-[300px] pt-6 print-chart-content">
+                    <ResponsiveContainer width={rcW} height={rcH}>
                         <AreaChart data={data} margin={{ top: 10, right: 30, left: 10, bottom: 0 }}>
                             <defs>
                                 <linearGradient id="colorCash" x1="0" y1="0" x2="0" y2="1">
@@ -364,7 +373,7 @@ export const FinancialCharts: React.FC<Props> = ({ data }) => {
                             />
 
                             <Tooltip
-                                formatter={(val: number | undefined) => Math.round(val || 0).toLocaleString()}
+                                formatter={(val) => fmtNum(val).toLocaleString()}
                                 contentStyle={{
                                     fontSize: '14px',
                                     fontWeight: 'bold',

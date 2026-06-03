@@ -82,3 +82,166 @@
     background-attachment: fixed;
   }
 }
+
+/* 騾壼ｸｸ譎ゅ�蜊ｰ蛻ｷ蟆ら畑隕∫ｴ�繧帝撼陦ｨ遉ｺ */
+.print-only,
+.print-summary-page {
+  display: none;
+}
+
+/* ===== pre-print�壼魂蛻ｷ繝懊ち繝ｳ謚ｼ荳句ｾ後�window.print()蜑阪↓繝√Ε繝ｼ繝医ｒ豁｣縺励＞繧ｵ繧､繧ｺ縺ｧ蜀肴緒逕ｻ縺輔○繧� ===== */
+html.pre-print header,
+html.pre-print .no-print {
+  display: none !important;
+}
+html.pre-print .print-results-col {
+  width: 100% !important;
+  max-width: 100% !important;
+}
+html.pre-print .print-charts-grid {
+  display: grid !important;
+  grid-template-columns: 1fr 1fr !important;
+  gap: 16px !important;
+}
+html.pre-print .print-charts-grid > * {
+  min-width: 0 !important;
+}
+html.pre-print .print-chart-content {
+  height: 360px !important;
+  padding-top: 8px !important;
+}
+html.pre-print .print-chart-wrapper {
+  padding: 4px !important;
+  border: none !important;
+  min-height: unset !important;
+}
+html.pre-print .print-only {
+  display: block !important;
+}
+
+/* ===== 蜊ｰ蛻ｷ繧ｹ繧ｿ繧､繝ｫ��A3讓ｪ�� ===== */
+@media print {
+  @page {
+    size: A3 landscape;
+    margin: 10mm 12mm;
+  }
+
+  header,
+  .no-print {
+    display: none !important;
+  }
+
+  .print-only {
+    display: block !important;
+  }
+
+  body {
+    background-image: none !important;
+    background-color: white !important;
+    font-size: 11px;
+  }
+
+  * {
+    box-shadow: none !important;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+
+  .print-results-col {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  .print-chart-wrapper {
+    padding: 4px !important;
+    border: none !important;
+    min-height: unset !important;
+  }
+
+  /* 繝√Ε繝ｼ繝医�pre-print縺ｧ蜀肴緒逕ｻ貂医∩縺ｮ縺溘ａ蜷後§繝ｬ繧､繧｢繧ｦ繝医ｒ邯ｭ謖� */
+  .print-charts-grid {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 16px !important;
+  }
+
+  .print-charts-grid > * {
+    overflow: hidden !important;
+    min-width: 0 !important;
+  }
+
+  .print-chart-content {
+    height: 270px !important;
+    padding-top: 8px !important;
+  }
+
+  /* 謾ｹ繝壹�繧ｸ隕∫ｴ� */
+  .print-page-break {
+    page-break-after: always !important;
+    height: 0 !important;
+    display: block !important;
+  }
+
+  /* ===== 繝壹�繧ｸ2�夊ｩｦ邂玲擅莉ｶ繧ｵ繝槭Μ繝ｼ ===== */
+  .print-summary-page {
+    display: block !important;
+    padding: 0;
+  }
+
+  /* 3蛻励Ξ繧､繧｢繧ｦ繝茨ｼ壼ｷｦ��A/C/E/F/G/H��+ 荳ｭ��D-蝗ｺ螳夊ｲｻ��+ 蜿ｳ��D-迚ｹ蛻･雋ｻ�� */
+  .print-summary-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 6mm;
+    margin-top: 4mm;
+    align-items: start;
+  }
+
+  .print-summary-left-col,
+  .print-summary-mid-col,
+  .print-summary-right-col {
+    display: flex;
+    flex-direction: column;
+    gap: 4mm;
+  }
+
+  .print-summary-section {
+    break-inside: avoid;
+  }
+
+  .print-summary-heading {
+    font-size: 11px;
+    font-weight: 700;
+    color: #1e293b;
+    border-bottom: 1.5px solid #334155;
+    padding-bottom: 2px;
+    margin-bottom: 4px;
+  }
+
+  .print-summary-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 10px;
+  }
+
+  .print-summary-table td {
+    padding: 2px 4px;
+    vertical-align: top;
+    border-bottom: 0.5px solid #e2e8f0;
+    color: #334155;
+  }
+
+  .print-summary-table td:first-child {
+    white-space: nowrap;
+    color: #64748b;
+    width: 35%;
+  }
+
+  .print-summary-divider {
+    font-size: 9px;
+    color: #94a3b8;
+    font-weight: 600;
+    padding: 3px 4px 1px;
+    background: #f8fafc;
+  }
+}

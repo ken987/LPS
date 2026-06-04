@@ -1,0 +1,247 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+
+    --primary: 222.2 47.4% 11.2%;
+    --primary-foreground: 210 40% 98%;
+
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 222.2 84% 4.9%;
+
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+
+    --primary: 210 40% 98%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 212.7 26.8% 83.9%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    /* Restore Premium Background */
+    background-image:
+      linear-gradient(rgba(255, 255, 255, 0.65), rgba(255, 255, 255, 0.65)),
+      url('/illustration/background illustration.png');
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+  }
+}
+
+/* 通常時は印刷専用要素を非表示 */
+.print-only,
+.print-summary-page {
+  display: none;
+}
+
+/* ===== pre-print：印刷ボタン押下後・window.print()前にチャートを正しいサイズで再描画させる ===== */
+html.pre-print header,
+html.pre-print .no-print {
+  display: none !important;
+}
+html.pre-print .print-results-col {
+  width: 100% !important;
+  max-width: 100% !important;
+}
+html.pre-print .print-charts-grid {
+  display: grid !important;
+  grid-template-columns: 1fr 1fr !important;
+  gap: 16px !important;
+}
+html.pre-print .print-charts-grid > * {
+  min-width: 0 !important;
+}
+html.pre-print .print-chart-content {
+  height: 360px !important;
+  padding-top: 8px !important;
+}
+html.pre-print .print-chart-wrapper {
+  padding: 4px !important;
+  border: none !important;
+  min-height: unset !important;
+}
+html.pre-print .print-only {
+  display: block !important;
+}
+
+/* ===== 印刷スタイル（A3横） ===== */
+@media print {
+  @page {
+    size: A3 landscape;
+    margin: 10mm 12mm;
+  }
+
+  header,
+  .no-print {
+    display: none !important;
+  }
+
+  .print-only {
+    display: block !important;
+  }
+
+  body {
+    background-image: none !important;
+    background-color: white !important;
+    font-size: 11px;
+  }
+
+  * {
+    box-shadow: none !important;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+
+  .print-results-col {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  .print-chart-wrapper {
+    padding: 4px !important;
+    border: none !important;
+    min-height: unset !important;
+  }
+
+  /* チャートはpre-printで再描画済みのため同じレイアウトを維持 */
+  .print-charts-grid {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 16px !important;
+  }
+
+  .print-charts-grid > * {
+    overflow: hidden !important;
+    min-width: 0 !important;
+  }
+
+  .print-chart-content {
+    height: 270px !important;
+    padding-top: 8px !important;
+  }
+
+  /* 改ページ要素 */
+  .print-page-break {
+    page-break-after: always !important;
+    height: 0 !important;
+    display: block !important;
+  }
+
+  /* ===== ページ2：試算条件サマリー ===== */
+  .print-summary-page {
+    display: block !important;
+    padding: 0;
+  }
+
+  /* 3列レイアウト：左（A/C/E/F/G/H）+ 中（D-固定費）+ 右（D-特別費） */
+  .print-summary-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 6mm;
+    margin-top: 4mm;
+    align-items: start;
+  }
+
+  .print-summary-left-col,
+  .print-summary-mid-col,
+  .print-summary-right-col {
+    display: flex;
+    flex-direction: column;
+    gap: 4mm;
+  }
+
+  .print-summary-section {
+    break-inside: avoid;
+  }
+
+  .print-summary-heading {
+    font-size: 11px;
+    font-weight: 700;
+    color: #1e293b;
+    border-bottom: 1.5px solid #334155;
+    padding-bottom: 2px;
+    margin-bottom: 4px;
+  }
+
+  .print-summary-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 10px;
+  }
+
+  .print-summary-table td {
+    padding: 2px 4px;
+    vertical-align: top;
+    border-bottom: 0.5px solid #e2e8f0;
+    color: #334155;
+  }
+
+  .print-summary-table td:first-child {
+    white-space: nowrap;
+    color: #64748b;
+    width: 35%;
+  }
+
+  .print-summary-divider {
+    font-size: 9px;
+    color: #94a3b8;
+    font-weight: 600;
+    padding: 3px 4px 1px;
+    background: #f8fafc;
+  }
+}
